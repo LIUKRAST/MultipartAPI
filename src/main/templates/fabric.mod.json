@@ -1,0 +1,41 @@
+{
+    "schemaVersion": 1,
+    "id": "${mod_id}",
+    "version": "${mod_version}",
+    "name": "${mod_name}",
+    "description": "${mod_description}",
+    "authors": [
+        "${mod_authors}"
+    ],
+    "contact": {
+        "homepage": "https://liukrast.net/mods/multipart_api",
+        "sources": "https://github.com/LIUKRAST/MultipartAPI",
+        "issues": "https://github.com/LIUKRAST/MultipartAPI/issues"
+    },
+    "license": "${mod_license}",
+    "icon": "${mod_id}.png",
+    "environment": "*",
+    "mixins": [
+        "${mod_id}.mixins.json"
+    ],
+    "depends": {
+        "fabricloader": ">=${fabric_loader_version}",
+        "fabric-api": "*",
+        "minecraft": "${minecraft_version}",
+        "java": ">=21"
+    },
+    "suggests": {
+        "another-mod": "*"
+    },
+    "custom": {
+        "modmenu": {
+            "links": {
+                "modmenu.discord": "https://discord.gg/pvn8zg9bNY",
+                "modmenu.website": "https://liukrast.net/mods/multipart_api",
+                "modmenu.issues": "https://github.com/LIUKRAST/MultipartAPI/issues"
+            },
+            "update_checked": true
+        }
+    }
+}
+  

@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.liukrast.multipart.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "multipart_api.refmap.json",
+  "mixins": [
+  ],
+  "client": [
+    "LevelRendererMixin",
+    "MinecraftMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
