@@ -22,6 +22,9 @@ In your `dependencies`, include the library like this:
 
 ```kotlin
 implementation("net.liukrast:multipart_api-${minecraft_version}:${multipart_version}")
+
+//Optional, it is recommended to register the api for JarInJar
+jarJar("net.liukrast:multipart_api-${minecraft_version}:[${multipart_version},)")
 ```
 
 Supports **NeoForge** and **Fabric** automatically based on your environment.
