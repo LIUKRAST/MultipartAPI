@@ -2,6 +2,9 @@ package net.liukrast.multipart.example;
 
 import net.liukrast.multipart.block.AbstractFacingMultipartBlock;
 
+/**
+ * This is an example implementation of the facing multipart block
+ * */
 @Deprecated
 public class ExampleFacingMultipartBlock extends AbstractFacingMultipartBlock {
     /**
@@ -13,6 +16,10 @@ public class ExampleFacingMultipartBlock extends AbstractFacingMultipartBlock {
         super(properties);
     }
 
+    /**
+     * Abstract method to define the relative positions of the block parts.
+     * @param builder the builder used to define positions.
+     */
     @Override
     public void defineParts(Builder builder) {
         builder.define(0,0,0); //Origin block

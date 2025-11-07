@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 /**
  * Unimplemented version of {@link AbstractMultipartBlock}. You will have to introduce
  * */
+@SuppressWarnings("JavadocReference")
 public interface IMultipartBlock {
     /**
      * Abstract method to define the relative positions of the block parts.
@@ -37,21 +38,44 @@ public interface IMultipartBlock {
         return Direction.NORTH;
     }
 
+    /**
+     * It should not be used anywhere, only overwritten;
+     * If you're trying to access the size use {@link IMultipartBlock#size()}
+     * @return the positions you internally stored. See {@link AbstractMultipartBlock#positions}
+     * */
     @ApiStatus.OverrideOnly
     List<BlockPos> getPositions();
 
+    /**
+     * Internally sets the position list to your implemented code. It should not be used anywhere, only overwritten
+     * @param positions positions the API is trying to set, which your code stored internally. See {@link AbstractMultipartBlock#positions}
+     * */
     @ApiStatus.OverrideOnly
     void setPositions(List<BlockPos> positions);
 
     /**
-     * Returns the integer property representing the part of the block.
+     * Gives you the IntegerProperty of this precise multipart block
      * @return the IntegerProperty associated with the parts.
      */
     IntegerProperty getPartsProperty();
 
+    /**
+     * Sets the property.
+     * You should not use this, only override it,
+     * to set a variable internally like {@link AbstractMultipartBlock#property}
+     * @param property the properties to be set
+     * */
     @ApiStatus.OverrideOnly
     void setPartsProperty(IntegerProperty property);
 
+    /**
+     * Boilerplate method to override {@link Block#setPlacedBy(Level, BlockPos, BlockState, LivingEntity, ItemStack)}
+     * @param level the level
+     * @param pos the block position
+     * @param state the block state
+     * @param placer the block placer
+     * @param stack the item stack used by the placer
+     * */
     default void setPlacedBy(@NotNull Level level, BlockPos pos, @NotNull BlockState state, LivingEntity placer, @NotNull ItemStack stack) {
         var direction = getDirection(state);
         var positions = getPositions();
@@ -101,6 +125,10 @@ public interface IMultipartBlock {
         }
     }
 
+    /**
+     * Boilerplate method to create the blockstate definition.
+     * @param builder the block state builder
+     * */
     default void createBlockStateDefinition$multipart(StateDefinition.Builder<Block, BlockState> builder) {
         var builder1 = new AbstractMultipartBlock.Builder();
         defineParts(builder1);
@@ -109,6 +137,13 @@ public interface IMultipartBlock {
         builder.add(getPartsProperty());
     }
 
+    /**
+     * Boilerplate method to override {@link net.minecraft.world.level.block.state.BlockBehaviour#canSurvive(BlockState, LevelReader, BlockPos)}
+     * @param state the blockstate
+     * @param level the level
+     * @param pos the block pos
+     * @return whether the block can survive or not at that position. Will check for all other blocks of the multipart
+     * */
     default boolean canSurvive(@NotNull BlockState state, @NotNull LevelReader level, @NotNull BlockPos pos) {
         var direction = getDirection(state);
         var statePos = getPositions().get(state.getValue(getPartsProperty()));
@@ -124,6 +159,12 @@ public interface IMultipartBlock {
         return bl;
     }
 
+    /**
+     * Boilerplate method to override {@link Block#destroy(LevelAccessor, BlockPos, BlockState)}
+     * @param level the level
+     * @param pos the block position
+     * @param state the block state
+     * */
     default void destroy(@NotNull LevelAccessor level, @NotNull BlockPos pos, @NotNull BlockState state) {
         var direction = getDirection(state);
         var statePos = getPositions().get(state.getValue(getPartsProperty()));

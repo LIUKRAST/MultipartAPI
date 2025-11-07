@@ -35,6 +35,14 @@ Supports **NeoForge** and **Fabric** automatically based on your environment.
 
 The API is designed to be minimal and straightforward.
 
+Basically we create a new block with a new blockstate called `parts`, which is an integer property (stores numbers).
+
+You will define all positions of your multipart block, and the API will handle the rest:
+
+if I create a multipart 6x2x3 (six blocks on the X, two on the Y and three on the Z),
+it will automatically generate a blockstate `parts` with numbers from 0 -> 35.
+The API automatically handles everything, block placement, block destroy, spacing problems (maybe theres not enough space to place that block)
+
 ### 🔨 Extend the base multipart block
 
 Create a block that extends `AbstractMultipartBlock` (or `AbstractFacingMultipartBlock` if you need horizontal orientation):
@@ -54,6 +62,63 @@ public class ExampleMultipartBlock extends AbstractMultipartBlock {
     }
 }
 ```
+
+That's basically it... stupid, isn't it? 
+Well, you can play around with some other things, of course.
+
+#### Simple example: placing your block from another position
+If you create a big multipart with a simple loop, you will get something weird:
+```java
+    @Override
+    public void defineParts(Builder builder) {
+        for(int x = 0; x < 3; x++) {
+            for(int y = 0; y < 2; y++) {
+                builder.define(x, y, 0);
+            }
+        }
+    }
+```
+
+But now... hey! My block always places from one corner instead of the center
+
+There are two ways to solve this:
+##### A. Recommended: use default state
+Define in the constructor which part you want to get placed on the block you actually right-clicked:
+```java
+    public MyMultiPartWithMoreThanFourParts(Properties properties) {
+        super(properties);
+        registerDefaultState(defaultBlockState().setValue(getPartsProperty(), 4));
+    }
+```
+And now it will place part 4 on the block you were aiming when right-clicked with the block in your hand!
+##### B. Unrecommended: defining parts manually
+You can also play around with parts to get the same result
+```java
+    @Override
+    public void defineParts(Builder builder) {
+        builder.define(0,0,0); //ORIGIN, the block that will be placed where i right-click
+        builder.define(-1,0,0); //on the left of the origin
+        builder.define(1,0,0); //on the right of the origin
+    }
+```
+
+#### Simple example: different shapes for state
+Let's say your multipart has a complex model: you can define a shape for each part like this:
+
+```java
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        int part = getPartsProperty();
+        if(part == 0) {
+            return YOUR_SHAPE_FOR_PART_0;
+        }
+        else return YOUR_SHAPE_FOR_OTHERS;
+    }
+```
+
+Of course, you can play around with switches and other states!
+
+
 
 ---
 

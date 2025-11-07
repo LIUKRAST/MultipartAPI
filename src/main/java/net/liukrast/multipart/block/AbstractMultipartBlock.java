@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -81,6 +82,12 @@ public abstract class AbstractMultipartBlock extends Block implements IMultipart
      */
     public static class Builder {
         private final List<BlockPos> positions = new ArrayList<>();
+        /**
+         * Main constructor for Builder.
+         * You should not use this.
+         * You will only care about {@link Builder#define(int, int, int)}
+         * */
+        @ApiStatus.Internal
         protected Builder() {}
 
         /**
@@ -99,6 +106,11 @@ public abstract class AbstractMultipartBlock extends Block implements IMultipart
             return this;
         }
 
+        /**
+         * Internal code. Do not use.
+         * @return a list of block positions
+         * */
+        @ApiStatus.Internal
         protected List<BlockPos> build() {
             if(positions.isEmpty()) throw new IllegalStateException("The multipart builder should not be empty");
             return ImmutableList.copyOf(positions);
