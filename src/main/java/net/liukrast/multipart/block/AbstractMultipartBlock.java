@@ -1,9 +1,7 @@
 package net.liukrast.multipart.block;
 
 import com.google.common.collect.ImmutableList;
-import net.liukrast.multipart.MultipartAPI;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -17,14 +15,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
- * Abstract class for multipart blocks composed of multiple parts
- * positioned relative to each other.
+ * Implementation of {@link IMultipartBlock}
+ *
+ * Most cases do not need you to implement the interface, but to use this abstract class instead
+ * If you want to see an example implementation, check {@link net.liukrast.multipart.example.ExampleMultipartBlock}
  */
-@SuppressWarnings("unused")
-public abstract class AbstractMultipartBlock extends Block {
+@SuppressWarnings({"unused", "deprecation"})
+public abstract class AbstractMultipartBlock extends Block implements IMultipartBlock {
     private List<BlockPos> positions;
     private IntegerProperty property;
 
@@ -37,119 +36,44 @@ public abstract class AbstractMultipartBlock extends Block {
         registerDefaultState(defaultBlockState().setValue(property, 0));
     }
 
-    /**
-     * Abstract method to define the relative positions of the block parts.
-     * @param builder the builder used to define positions.
-     */
-    public abstract void defineParts(Builder builder);
-
-    /**
-     * Returns the direction of the block.
-     * @param state the block state.
-     * @return the block direction (default NORTH).
-     */
-    public Direction getDirection(BlockState state) {
-        return Direction.NORTH;
+    @Override
+    public List<BlockPos> getPositions() {
+        return positions;
     }
 
-    /**
-     * Returns the integer property representing the part of the block.
-     * @return the IntegerProperty associated with the parts.
-     */
+    @Override
+    public void setPositions(List<BlockPos> positions) {
+        this.positions = positions;
+    }
+
+    @Override
     public IntegerProperty getPartsProperty() {
-        return this.property;
+        return property;
     }
 
     @Override
-    public void setPlacedBy(@NotNull Level level, BlockPos pos, @NotNull BlockState state, LivingEntity placer, @NotNull ItemStack stack) {
-        var direction = getDirection(state);
-        var statePos = positions.get(state.getValue(property));
-        var origin = pos.relative(direction, statePos.getZ()).relative(Direction.UP, -statePos.getY()).relative(direction.getCounterClockWise(), -statePos.getX());
-        for(int i = 0; i < positions.size(); i++) {
-            var pos1 = positions.get(i);
-            level.setBlock(origin.relative(direction, -pos1.getZ()).relative(Direction.UP, pos1.getY()).relative(direction.getCounterClockWise(), pos1.getX()), state.setValue(property, i), 3);
-        }
-    }
-
-    /**
-     * Calculates the origin position of the multipart given a position and direction.
-     * @param pos the reference position.
-     * @param statePos the relative part position.
-     * @param direction the block direction.
-     * @return the origin position in the world.
-     */
-    public BlockPos getOrigin(BlockPos pos, BlockPos statePos, Direction direction) {
-        return pos.relative(direction, statePos.getZ()).relative(Direction.UP, -statePos.getY()).relative(direction.getCounterClockWise(), -statePos.getX());
-    }
-
-    /**
-     * Calculates the relative position of a part from the origin.
-     * @param pos the origin position.
-     * @param statePos the relative part position.
-     * @param direction the block direction.
-     * @return the relative position in the world.
-     */
-    public BlockPos getRelative(BlockPos pos, BlockPos statePos, Direction direction) {
-        return pos.relative(direction, -statePos.getZ()).relative(Direction.UP, statePos.getY()).relative(direction.getCounterClockWise(), statePos.getX());
-    }
-
-    /**
-     * Performs an operation on every part of the multipart block.
-     * @param pos the block position.
-     * @param state the block state.
-     * @param consumer the operation to perform on each part position.
-     */
-    public void forEachElement(BlockPos pos, BlockState state, Consumer<BlockPos> consumer) {
-        var direction = getDirection(state);
-        var statePos = positions.get(state.getValue(property));
-        var origin = getOrigin(pos, statePos, direction);
-        for(BlockPos temp : positions) {
-            consumer.accept(getRelative(origin, temp, direction));
-        }
+    public void setPartsProperty(IntegerProperty property) {
+        this.property = property;
     }
 
     @Override
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        var builder1 = new Builder();
-        defineParts(builder1);
-        this.positions = builder1.build();
-        this.property = IntegerProperty.create("part", 0, positions.size()-1);
-        builder.add(this.property);
+    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, LivingEntity placer, @NotNull ItemStack stack) {
+        IMultipartBlock.super.setPlacedBy(level, pos, state, placer, stack);
     }
 
     @Override
-    protected boolean canSurvive(@NotNull BlockState state, @NotNull LevelReader level, @NotNull BlockPos pos) {
-        var direction = getDirection(state);
-        var statePos = positions.get(state.getValue(property));
-        var origin = getOrigin(pos, statePos, direction);
-        boolean bl = true;
-        for (BlockPos temp : positions) {
-            var pos1 = getRelative(origin, temp, direction);
-            var state1 = level.getBlockState(pos1);
-            if (state1.canBeReplaced()) continue;
-            if(level.isClientSide()) MultipartAPI.notify(pos1);
-            bl = false;
-        }
-        return bl;
+    protected void createBlockStateDefinition(StateDefinition.@NotNull Builder<Block, BlockState> builder) {
+        IMultipartBlock.super.createBlockStateDefinition$multipart(builder);
+    }
+
+    @Override
+    public boolean canSurvive(@NotNull BlockState state, @NotNull LevelReader level, @NotNull BlockPos pos) {
+        return IMultipartBlock.super.canSurvive(state, level, pos);
     }
 
     @Override
     public void destroy(@NotNull LevelAccessor level, @NotNull BlockPos pos, @NotNull BlockState state) {
-        var direction = getDirection(state);
-        var statePos = positions.get(state.getValue(property));
-        var origin = getOrigin(pos, statePos, direction);
-        for (BlockPos temp : positions) {
-            var pos1 = getRelative(origin, temp, direction);
-            level.destroyBlock(pos1, false);
-        }
-    }
-
-    /**
-     * Returns the total number of parts composing the multipart block.
-     * @return the number of parts.
-     */
-    public int size() {
-        return positions.size();
+        IMultipartBlock.super.destroy(level, pos, state);
     }
 
     /**
@@ -157,7 +81,7 @@ public abstract class AbstractMultipartBlock extends Block {
      */
     public static class Builder {
         private final List<BlockPos> positions = new ArrayList<>();
-        private Builder() {}
+        protected Builder() {}
 
         /**
          * Defines a new relative position for a part.
@@ -167,6 +91,7 @@ public abstract class AbstractMultipartBlock extends Block {
          * @return the builder instance for chaining.
          * @throws IllegalCallerException if the position is already defined.
          */
+        @SuppressWarnings("UnusedReturnValue")
         public Builder define(int x, int y, int z) {
             var pos = new BlockPos(x,y,z);
             if(positions.contains(pos)) throw new IllegalCallerException(String.format("Position [%s, %s, %s] is already defined", x, y, z));
@@ -174,7 +99,7 @@ public abstract class AbstractMultipartBlock extends Block {
             return this;
         }
 
-        private List<BlockPos> build() {
+        protected List<BlockPos> build() {
             if(positions.isEmpty()) throw new IllegalStateException("The multipart builder should not be empty");
             return ImmutableList.copyOf(positions);
         }

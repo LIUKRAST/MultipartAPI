@@ -15,8 +15,9 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Abstract base class for multipart blocks with horizontal facing.
  * Extends {@link AbstractMultipartBlock} and adds horizontal orientation support.
+ * Check {@link net.liukrast.multipart.example.ExampleFacingMultipartBlock} for an example usage
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "deprecation"})
 public abstract class AbstractFacingMultipartBlock extends AbstractMultipartBlock {
     /**
      * The horizontal facing direction property (NORTH, SOUTH, EAST, WEST).
