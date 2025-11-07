@@ -118,6 +118,12 @@ Let's say your multipart has a complex model: you can define a shape for each pa
 
 Of course, you can play around with switches and other states!
 
+#### Complex case: the IMultiPartBlock Interface
+Starting from 1.0.4, a new interface has been added which will be useful in more restricted cases.
+
+Let's say you already have a class to extend for your block... some other block class that you can't avoid extending...
+In that case you wouldn't be able to extends `AbstractMultipartBlock`... so here is the solution.
+Instead, you can implement `IMultiPartBlock`, but be careful, because you will have a few methods to implement which are already pre-implemented in the abstract class.
 
 
 ---
