@@ -130,6 +130,7 @@ public interface IMultipartBlock {
         var origin = getOrigin(pos, statePos, direction);
         for (BlockPos temp : getPositions()) {
             var pos1 = getRelative(origin, temp, direction);
+            if(!level.getBlockState(pos1).is(state.getBlock())) continue;
             level.destroyBlock(pos1, false);
         }
     }
