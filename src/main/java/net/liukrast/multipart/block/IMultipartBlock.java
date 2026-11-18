@@ -79,7 +79,7 @@ public interface IMultipartBlock {
     default void setPlacedBy(@NotNull Level level, BlockPos pos, @NotNull BlockState state, LivingEntity placer, @NotNull ItemStack stack) {
         var direction = getDirection(state);
         var positions = getPositions();
-        var statePos = positions.get(state.getValue(getPartsProperty()));
+        var statePos = positions.get(getPartIndex(state));
         var origin = pos.relative(direction, statePos.getZ()).relative(Direction.UP, -statePos.getY()).relative(direction.getCounterClockWise(), -statePos.getX());
         for(int i = 0; i < positions.size(); i++) {
             var pos1 = positions.get(i);
@@ -118,7 +118,7 @@ public interface IMultipartBlock {
     @SuppressWarnings("unused")
     default void forEachElement(BlockPos pos, BlockState state, Consumer<BlockPos> consumer) {
         var direction = getDirection(state);
-        var statePos = getPositions().get(state.getValue(getPartsProperty()));
+        var statePos = getPositions().get(getPartIndex(state));
         var origin = getOrigin(pos, statePos, direction);
         for(BlockPos temp : getPositions()) {
             consumer.accept(getRelative(origin, temp, direction));
@@ -133,7 +133,8 @@ public interface IMultipartBlock {
         var builder1 = new AbstractMultipartBlock.Builder();
         defineParts(builder1);
         setPositions(builder1.build());
-        setPartsProperty(IntegerProperty.create("part", 0, size()-1));
+        int maxIndex = hasControllerState() ? size() : size() - 1;
+        setPartsProperty(IntegerProperty.create("part", 0, maxIndex));
         builder.add(getPartsProperty());
     }
 
@@ -146,14 +147,14 @@ public interface IMultipartBlock {
      * */
     default boolean canSurvive(@NotNull BlockState state, @NotNull LevelReader level, @NotNull BlockPos pos) {
         var direction = getDirection(state);
-        var statePos = getPositions().get(state.getValue(getPartsProperty()));
+        var statePos = getPositions().get(getPartIndex(state));
         var origin = getOrigin(pos, statePos, direction);
         boolean bl = true;
         for (BlockPos temp : getPositions()) {
             var pos1 = getRelative(origin, temp, direction);
             var state1 = level.getBlockState(pos1);
             if (state1.canBeReplaced()) continue;
-            if(level.isClientSide()) MultipartAPI.notify(pos1);
+            if (level.isClientSide()) MultipartAPI.notify(pos1);
             bl = false;
         }
         return bl;
@@ -167,11 +168,11 @@ public interface IMultipartBlock {
      * */
     default void destroy(@NotNull LevelAccessor level, @NotNull BlockPos pos, @NotNull BlockState state) {
         var direction = getDirection(state);
-        var statePos = getPositions().get(state.getValue(getPartsProperty()));
+        var statePos = getPositions().get(getPartIndex(state));
         var origin = getOrigin(pos, statePos, direction);
         for (BlockPos temp : getPositions()) {
             var pos1 = getRelative(origin, temp, direction);
-            if(!level.getBlockState(pos1).is(state.getBlock())) continue;
+            if (!level.getBlockState(pos1).is(state.getBlock())) continue;
             level.destroyBlock(pos1, false);
         }
     }
@@ -182,5 +183,40 @@ public interface IMultipartBlock {
      */
     default int size() {
         return getPositions().size();
+    }
+
+    default boolean hasControllerState() {
+        return false;
+    }
+
+    default int getPartIndex(BlockState state) {
+        int part = state.getValue(getPartsProperty());
+        return (hasControllerState() && part == size()) ? 0 : part;
+    }
+
+    default boolean isController(BlockState state) {
+        int part = state.getValue(getPartsProperty());
+        return part == 0 || (hasControllerState() && part == size());
+    }
+
+    default boolean isControllerActive(BlockState state) {
+        return hasControllerState() && state.getValue(getPartsProperty()) == size();
+    }
+
+    default void setControllerActive(Level level, BlockPos pos, boolean active) {
+        if(!hasControllerState()) return;
+        BlockState state = level.getBlockState(pos);
+        if(!state.is((Block)this) || !isController(state)) return;
+
+        int target = active ? size() : 0;
+        if(state.getValue(getPartsProperty()) != target)
+            level.setBlock(pos, state.setValue(getPartsProperty(), target), Block.UPDATE_ALL);
+    }
+
+    default BlockPos getControllerPos(BlockPos pos, BlockState state) {
+        var direction = getDirection(state);
+        var statePos = getPositions().get(getPartIndex(state));
+        var origin = getOrigin(pos, statePos, direction);
+        return getRelative(origin, getPositions().getFirst(), direction);
     }
 }
